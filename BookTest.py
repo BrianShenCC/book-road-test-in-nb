@@ -9,6 +9,7 @@ class TeamsLogin:
     birthDay = ''
     email = ''
     searchTimes = 1
+    location = 'Fredericton'
 
     def __init__(self):
         self.page = None
@@ -25,7 +26,7 @@ class TeamsLogin:
         self.page.eval_on_selector("#confirmeligible", "element => element.click()")
         sleep(1)
         handle = self.page.query_selector("#ResourceID")
-        handle.select_option(label="Fredericton")
+        handle.select_option(label=self.location)
         sleep(1)
         self.page.eval_on_selector("#DEX_LangChoice", "element => element.click()")
         sleep(1)
