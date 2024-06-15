@@ -17,7 +17,7 @@ class TeamsLogin:
         self.captcha_img = None
 
     def handleStep1(self):
-        print("enter handleStep1")
+        print("enter handleStep1", self.page.url)
         handle = self.page.query_selector("#DEX_TestTypeID")
         handle.select_option(label="Road test - car (Class 7, Level 2 or Class 5)")
         sleep(1)
@@ -30,11 +30,15 @@ class TeamsLogin:
         self.page.eval_on_selector("#DEX_LangChoice", "element => element.click()")
         sleep(1)
         self.page.locator("#_ctl4_DEX_btnSubmit").click()
-        sleep(3)
+        sleep(10)
         self.handleStep2()
 
     def handleStep2(self):
-        print("enter handleStep2")
+        if self.page.url == 'https://www.pxw1.snb.ca/snb9000/product.aspx?ProductID=A014SN9000a&l=#TopOfPage':
+            self.page.goto("https://www.pxw1.snb.ca/snb9000/product.aspx?productid=A014SN9000a&l=e")
+            self.handleStep1()
+            return
+        print("enter handleStep2", self.page.url)
         self.page.locator("#DriverLicenseNumber").fill(self.driverLicenseNumber)
         sleep(1)
         self.page.locator("#des_DOB").fill(self.birthDay)
@@ -74,7 +78,7 @@ class TeamsLogin:
 
 
     def handleStep3(self):
-        print("enter handleStep3")
+        print("enter handleStep3", self.page.url)
         message_elem = self.page.get_by_text('No available slot found for this test type at this location, try searching on a different location.')
         print(str(message_elem))
         if message_elem:
@@ -105,7 +109,6 @@ class TeamsLogin:
         with open(path, 'rb') as file:
             image = file.read()
         result = reader.readtext(image)
-        print(result)
         return result[0][1]
 
     def recognizeCaptcha(self, path):
@@ -120,28 +123,34 @@ class TeamsLogin:
     def login(self, url):
         if url == None:
             return
+        try:
+            self.playwright = sync_playwright().start()
+            self.browser = self.playwright.chromium.launch(
+                headless=False,  # Set headless=False for testing
+                ignore_default_args=["--mute-audio"]
+            )
+            context = self.browser.new_context(permissions=['microphone', 'camera'])
+            self.page = context.new_page()
+            self.page.goto(url)
+            print('Browser should be running')
+            self.page.locator("#_ctl4_DEX_chooseEnglish").click()
+            sleep(1)
+            self.page.locator("#btnWritten").click()
+            sleep(1)
+            self.page.locator("#DEX_btnBook").click()
+            sleep(1)
 
-        self.playwright = sync_playwright().start()
-        self.browser = self.playwright.chromium.launch(
-            headless=False,  # Set headless=False for testing
-            ignore_default_args=["--mute-audio"]
-        )
-        context = self.browser.new_context(permissions=['microphone', 'camera'])
-        self.page = context.new_page()
-        self.page.goto(url)
-        print('Browser should be running')
-        self.page.locator("#_ctl4_DEX_chooseEnglish").click()
-        sleep(1)
-        self.page.locator("#btnWritten").click()
-        sleep(1)
-        self.page.locator("#DEX_btnBook").click()
-        sleep(1)
-
-        self.handleStep1()
-
+            self.handleStep1()
+        except Exception as e:
+            self.page.screenshot(path='error.png')
+            print('Error')
+            print(e)
         sleep(1000)
 
 
 if __name__ == "__main__":
     # print(TeamsLogin().getCaptchaText('captcha.png'))
+
     TeamsLogin().login(TeamsLogin.url)
+
+
