@@ -35,7 +35,8 @@ class TeamsLogin:
         self.handleStep2()
 
     def handleStep2(self):
-        if self.page.url == 'https://www.pxw1.snb.ca/snb9000/product.aspx?ProductID=A014SN9000a&l=#TopOfPage':
+        if self.page.url == 'https://www.pxw1.snb.ca/snb9000/product.aspx?ProductID=A014SN9000a&l=#TopOfPage' and 'https://www.pxw1.snb.ca/snb9000/product.aspx?ProductID=A014SN9000a&l=e#TopOfPage'== self.page.url:
+
             self.page.goto("https://www.pxw1.snb.ca/snb9000/product.aspx?productid=A014SN9000a&l=e")
             self.handleStep1()
             return
@@ -75,14 +76,14 @@ class TeamsLogin:
             print(e)
             sleep(5)
             self.page.reload()
+            sleep(5)
             self.handleStep2()
 
 
     def handleStep3(self):
         print("enter handleStep3", self.page.url)
         message_elem = self.page.get_by_text('No available slot found for this test type at this location, try searching on a different location.')
-        print(str(message_elem))
-        if message_elem:
+        if message_elem.count() == 1:
             print("Slot not found for "+ str(self.searchTimes)+" times, Searching again")
             self.searchTimes +=1
             self.page.locator("#_ctl4_DEX_btnSearchAgain").click()
