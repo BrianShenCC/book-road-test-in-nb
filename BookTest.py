@@ -34,12 +34,8 @@ class TeamsLogin:
         sleep(10)
         self.handleStep2()
 
-    def handleStep2(self):
-        if self.page.url == 'https://www.pxw1.snb.ca/snb9000/product.aspx?ProductID=A014SN9000a&l=#TopOfPage' and 'https://www.pxw1.snb.ca/snb9000/product.aspx?ProductID=A014SN9000a&l=e#TopOfPage'== self.page.url:
 
-            self.page.goto("https://www.pxw1.snb.ca/snb9000/product.aspx?productid=A014SN9000a&l=e")
-            self.handleStep1()
-            return
+    def handleStep2(self):
         print("enter handleStep2", self.page.url)
         self.page.locator("#DriverLicenseNumber").fill(self.driverLicenseNumber)
         sleep(1)
@@ -85,6 +81,7 @@ class TeamsLogin:
         message_elem = self.page.get_by_text('No available slot found for this test type at this location, try searching on a different location.')
         if message_elem.count() == 1:
             print("Slot not found for "+ str(self.searchTimes)+" times, Searching again")
+            self.page.screenshot(path='result'+str(self.searchTimes)+'.png')
             self.searchTimes +=1
             self.page.locator("#_ctl4_DEX_btnSearchAgain").click()
             # search every 5 minutes
@@ -122,18 +119,17 @@ class TeamsLogin:
         else:
             return captchaText
 
-    def login(self, url):
-        if url == None:
-            return
+    def start(self):
         try:
             self.playwright = sync_playwright().start()
             self.browser = self.playwright.chromium.launch(
                 headless=False,  # Set headless=False for testing
                 ignore_default_args=["--mute-audio"]
             )
+
             context = self.browser.new_context(permissions=['microphone', 'camera'])
             self.page = context.new_page()
-            self.page.goto(url)
+            self.page.goto(self.url, wait_until="networkidle")
             print('Browser should be running')
             self.page.locator("#_ctl4_DEX_chooseEnglish").click()
             sleep(1)
@@ -144,10 +140,17 @@ class TeamsLogin:
 
             self.handleStep1()
         except Exception as e:
-            self.page.screenshot(path='error.png')
+            self.browser.close()
+            self.playwright.stop()
             print('Error')
             print(e)
+            self.start()
         sleep(1000)
+
+    def login(self, url):
+        if url == None:
+            return
+        self.start()
 
 
 if __name__ == "__main__":
