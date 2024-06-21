@@ -104,10 +104,10 @@ class TeamsLogin:
 
 
     def getCaptchaText(self, path):
-        reader = easyocr.Reader(['en'])
         with open(path, 'rb') as file:
             image = file.read()
-        result = reader.readtext(image)
+        reader = easyocr.Reader(['en'])
+        result = reader.readtext(image, allowlist='0123456789', beamWidth=15)
         return result[0][1]
 
     def recognizeCaptcha(self, path):
@@ -154,8 +154,6 @@ class TeamsLogin:
 
 
 if __name__ == "__main__":
-    # print(TeamsLogin().getCaptchaText('captcha.png'))
-
     TeamsLogin().login(TeamsLogin.url)
 
 
