@@ -81,21 +81,21 @@ class TeamsLogin:
         message_elem = self.page.get_by_text('No available slot found for this test type at this location, try searching on a different location.')
         if message_elem.count() == 1:
             print("Slot not found for "+ str(self.searchTimes)+" times, Searching again")
-            self.page.screenshot(path='result'+str(self.searchTimes)+'.png')
+            self.page.screenshot(path='screenshot/result'+str(self.searchTimes)+'.png')
             self.searchTimes +=1
             self.page.locator("#_ctl4_DEX_btnSearchAgain").click()
             # search every 5 minutes
             sleep(5*60)
             self.handleStep1()
         else:
-            self.page.screenshot(path='test.png')
+            self.page.screenshot(path='screenshot/success.png')
             print("Slot found")
             subprocess.call(['open', 'alarm.mp3'])
 
     def handleCaptcha(self):
         self.captcha_img = self.page.wait_for_selector('xpath=//label[text()="Enter the CAPTCHA code exactly as it appears:"]/../following-sibling::div/img')
         captcha_img_box = self.captcha_img.bounding_box()
-        imagePath ='captcha.png'
+        imagePath ='screenshot/captcha.png'
         self.page.screenshot(path=imagePath, clip=captcha_img_box)
         sleep(3)
         captchaText = self.recognizeCaptcha(imagePath)
