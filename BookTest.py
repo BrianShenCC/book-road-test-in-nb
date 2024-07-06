@@ -18,6 +18,10 @@ class TeamsLogin:
 
     retry = 0
 
+    def getIsReschedule(self):
+        print()
+        return self.bookingId is not None and self.bookingId != ''
+
     def __init__(self):
         self.page = None
         self.playwright = None
@@ -27,7 +31,7 @@ class TeamsLogin:
     def handleStep1(self):
         print("enter handleStep1", self.page.url)
         self.retry = 0
-        if(self.bookingId is None):
+        if(self.getIsReschedule()==False):
             handle = self.page.query_selector("#DEX_TestTypeID")
             handle.select_option(label="Road test - car (Class 7, Level 2 or Class 5)")
             sleep(1)
@@ -196,7 +200,7 @@ class TeamsLogin:
             self.page.locator("#btnWritten").click()
             sleep(1)
 
-            if(self.bookingId is None):
+            if(self.getIsReschedule()==False):
                 # self.page.locator("#_ctl4_DEX_btnBook").click()
                 sleep(1)
                 self.page.locator("#DEX_btnBook").click()
