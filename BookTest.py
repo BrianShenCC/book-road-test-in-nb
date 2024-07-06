@@ -9,7 +9,14 @@ class TeamsLogin:
     birthDay = ''
     email = ''
     searchTimes = 1
-    location = 'Fredericton'
+    location = 'Burton'
+
+    # reschedule
+    bookingId = ''
+    first_name = ''
+    last_name = ''
+
+    retry = 0
 
     def __init__(self):
         self.page = None
@@ -19,11 +26,14 @@ class TeamsLogin:
 
     def handleStep1(self):
         print("enter handleStep1", self.page.url)
-        handle = self.page.query_selector("#DEX_TestTypeID")
-        handle.select_option(label="Road test - car (Class 7, Level 2 or Class 5)")
-        sleep(1)
-
-        self.page.eval_on_selector("#confirmeligible", "element => element.click()")
+        self.retry = 0
+        if(self.bookingId is None):
+            handle = self.page.query_selector("#DEX_TestTypeID")
+            handle.select_option(label="Road test - car (Class 7, Level 2 or Class 5)")
+            sleep(1)
+        checkElem = self.page.query_selector("#confirmeligible")
+        if(checkElem is not None and checkElem.as_element().is_checked() == False):
+            self.page.eval_on_selector("#confirmeligible", "element => element.click()")
         sleep(1)
         handle = self.page.query_selector("#ResourceID")
         handle.select_option(label=self.location)
@@ -68,6 +78,9 @@ class TeamsLogin:
 
             self.handleStep3()
         except Exception as e:
+            if(self.retry > 3):
+                raise Exception("Failed to submit Step2")
+            self.retry += 1
             print('###############')
             print(e)
             sleep(5)
@@ -119,6 +132,53 @@ class TeamsLogin:
         else:
             return captchaText
 
+    def reschedule(self):
+        self.page.keyboard.press("Tab")
+        self.page.keyboard.press("Tab")
+        self.page.keyboard.press("Tab")
+        self.page.keyboard.press("Tab")
+        self.page.keyboard.press("Tab")
+        self.page.keyboard.type(self.bookingId)
+        sleep(1)
+        self.page.keyboard.press("Tab")
+        self.page.keyboard.type(self.first_name)
+        sleep(1)
+        self.page.keyboard.press("Tab")
+        self.page.keyboard.type(self.last_name)
+        sleep(1)
+        self.page.keyboard.press("Tab")
+        self.page.keyboard.type(self.email)
+        sleep(1)
+        try:
+            self.handleCaptcha()
+        except Exception as e:
+            if(self.retry > 3):
+                raise Exception("Failed to submit reschedule")
+            self.retry += 1
+            print('###############')
+            print(e)
+            sleep(5)
+            self.page.reload()
+            sleep(5)
+            self.reschedule()
+            return
+        sleep(1)
+        self.page.locator("#_ctl4_DEX_btnSubmit").click()
+        # self.handleStep1()
+        sleep(5)
+        message_elem = self.page.query_selector('.ErrorDetail')
+        print('.............ErrorDetail', str(message_elem))
+        if message_elem != None:
+            print("Captcha is wrong. Try again.")
+            self.reschedule()
+            return
+        else:
+            self.page.locator("#_ctl4_DEX_btnReschedule").click()
+            sleep(5)
+            self.handleStep1()
+            sleep(5)
+
+
     def start(self):
         try:
             self.playwright = sync_playwright().start()
@@ -135,10 +195,18 @@ class TeamsLogin:
             sleep(1)
             self.page.locator("#btnWritten").click()
             sleep(1)
-            self.page.locator("#DEX_btnBook").click()
-            sleep(1)
 
-            self.handleStep1()
+            if(self.bookingId is None):
+                # self.page.locator("#_ctl4_DEX_btnBook").click()
+                sleep(1)
+                self.page.locator("#DEX_btnBook").click()
+                sleep(1)
+                self.handleStep1()
+            else:
+                self.page.locator("#DEX_btnEditAppointment").click()
+                sleep(1)
+                self.reschedule()
+
         except Exception as e:
             self.browser.close()
             self.playwright.stop()
