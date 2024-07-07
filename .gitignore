@@ -48,5 +48,6 @@ Thumbs.db
 *.mov
 *.wmv
 .venv/
-screenshots/
+screenshot/
+
 alarm.mp3
